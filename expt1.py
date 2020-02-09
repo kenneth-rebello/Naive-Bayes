@@ -1,119 +1,71 @@
-dataset = [
-           ['young','high','yes','fair','yes'],
-           ['young','medium','yes','fair','no'],
-           ['middle','low','no','fair','no'],
-           ['senior','high','no','excellent','yes']
-          ]
+import csv
 
-yesCount = {
-    'age':{
-        'young':0,
-        'middle':0,
-        'senior':0
-    },
-    'income':{
-        'low':0,
-        'high':0,
-        'medium':0
-    },
-    'student':{
-        'yes':0,
-        'no':0
-    },
-    'credit':{
-        'fair':0,
-        'excellent':0
-    }
-}
+dataset = []
+
+yesCount = {}
 yesTotal = 0
 
-noCount = {
-    'age':{
-        'young':0,
-        'middle':0,
-        'senior':0
-    },
-    'income':{
-        'low':0,
-        'high':0,
-        'medium':0
-    },
-    'student':{
-        'yes':0,
-        'no':0
-    },
-    'credit':{
-        'fair':0,
-        'excellent':0
-    }
-}
+noCount = {}
 noTotal = 0
+test = []
 
-eventProb = {
-    'age':{
-        'young':0,
-        'middle':0,
-        'senior':0
-    },
-    'income':{
-        'low':0,
-        'high':0,
-        'medium':0
-    },
-    'student':{
-        'yes':0,
-        'no':0
-    },
-    'credit':{
-        'fair':0,
-        'excellent':0
-    }
-}
+print("dataset and dataset2 are the available files for testing")
+filename = input("Enter filename, must be a csv\n")
+
+with open(filename+'.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    line_count = 0
+    for idx, row in enumerate(csv_reader):
+        if idx == 0:
+            features = row
+            for feature in row:
+                yesCount[feature] = {}
+                noCount[feature] = {}
+        else:
+            dataset.append(row)
+            for idx, value in enumerate(row):
+                yesCount[features[idx]][value] = 0
+                noCount[features[idx]][value] = 0
 
 
 for tuple in dataset:
     if(tuple[4]=='yes'):
-        yesCount['age'][tuple[0]] = yesCount['age'][tuple[0]] + 1
-        yesCount['income'][tuple[1]] = yesCount['income'][tuple[1]] + 1
-        yesCount['student'][tuple[2]] = yesCount['student'][tuple[2]] + 1
-        yesCount['credit'][tuple[3]] = yesCount['credit'][tuple[3]] + 1
+        for idx,feature in enumerate(yesCount.keys()):
+            yesCount[feature][tuple[idx]] = yesCount[feature][tuple[idx]] + 1
         yesTotal = yesTotal + 1
             
     else:
-        noCount['age'][tuple[0]] = noCount['age'][tuple[0]] + 1
-        noCount['income'][tuple[1]] = noCount['income'][tuple[1]] + 1
-        noCount['student'][tuple[2]] = noCount['student'][tuple[2]] + 1
-        noCount['credit'][tuple[3]] = noCount['credit'][tuple[3]] + 1
+        for idx,feature in enumerate(yesCount.keys()):
+            noCount[feature][tuple[idx]] = noCount[feature][tuple[idx]] + 1
         noTotal = noTotal + 1
 
 for feature in yesCount.keys():
     for value in yesCount[feature].keys():
-        eventProb[feature][value] = yesCount[feature][value] + noCount[feature][value]
         yesCount[feature][value] = yesCount[feature][value]/yesTotal
 
 for feature in noCount.keys():
     for value in noCount[feature].keys():
         noCount[feature][value] = noCount[feature][value]/noTotal
-
+        
+print('###THIS ALGORITHM IS SPECIFIC TO DATASETS HAVING ONLY ONE CLASS VARAIBLE SPECIFICALLY IN THE LAST COLUMN###')
 print('Enter tuple to test in following lines')
-a = input("Enter age").lower()
-i = input("Enter income").lower()
-s = input("Enter student or not").lower()
-c = input("Enter credit score").lower()
 
-probAge = yesCount['age'][a]
-probInc = yesCount['income'][i]
-probStud = yesCount['student'][s]
-probCred = yesCount['credit'][c]
+features.pop()
 
-probYes = (probAge * probInc * probStud * probCred)*(yesTotal/(yesTotal+noTotal))
+totalProbYes = 1
+totalProbNo = 1
+for idx, f in enumerate(features):
+    temp = input("Enter "+f+"\n")
+    test.append(temp)
+    totalProbYes = totalProbYes * yesCount[features[idx]][temp]
+    totalProbNo = totalProbNo * noCount[features[idx]][temp]
 
-probAge = noCount['age'][a]
-probInc = noCount['income'][i]
-probStud = noCount['student'][s]
-probCred = noCount['credit'][c]
+print('Tuple to be tested: ')
+print(test)
 
-probNo = (probAge * probInc * probStud * probCred)*(noTotal/(yesTotal+noTotal))
+probYes = totalProbYes *(yesTotal/(yesTotal+noTotal))
+
+probNo = totalProbNo *(noTotal/(yesTotal+noTotal))
 
 
 if(probYes==0):
@@ -121,9 +73,6 @@ if(probYes==0):
 else:
     percYes = probYes/(probYes+probNo)
     percNo = probNo/(probYes+probNo)
-
-    print(percYes)
-    print(percNo)
 
     if(percYes > percNo):
         print('Yes')
